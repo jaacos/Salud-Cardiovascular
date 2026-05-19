@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Salud Cardiovascular</title>
+    <!-- Tailwind CSS para el diseño -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js para las gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="max-w-md mx-auto bg-white min-h-screen shadow-lg sm:my-8 sm:rounded-2xl sm:min-h-0 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-blue-600 text-white p-6 text-center">
+            <h1 class="text-2xl font-bold"><i class="fas fa-heartbeat mr-2"></i> CardioCalc</h1>
+            <p class="text-sm text-blue-100 mt-1">PAM e Índice Fuster-BEWAT</p>
+        </div>
+
+        <!-- Navegación por pestañas -->
+        <div class="flex border-b">
+            <button onclick="switchTab('calculadora')" id="tab-calculadora" class="flex-1 py-3 text-center font-semibold tab-active">
+                <i class="fas fa-calculator"></i> Calculadora
+            </button>
+            <button onclick="switchTab('historial')" id="tab-historial" class="flex-1 py-3 text-center font-semibold text-gray-500">
+                <i class="fas fa-chart-line"></i> Historial
+            </button>
+        </div>
+
+        <!-- PESTAÑA CALCULADORA -->
+        <div id="view-calculadora" class="p-6">
+            <!-- Formulario -->
+            <form id="cardioForm" class="space-y-4">
+                
+                <!-- Presión Arterial -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-stethoscope text-blue-500"></i> Presión Arterial</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Sistólica (Alta)</label>
+                            <input type="number" id="pas" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: 120">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Diastólica (Baja)</label>
+                            <input type="number" id="pad" required class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: 80">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IMC (Peso) -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-weight text-blue-500"></i> Índice de Masa Corporal (IMC)</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Peso (kg)</label>
+                            <input type="number" id="peso" step="0.1" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: 75" oninput="calcularIMCOutomatico()">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-500 mb-1">Altura (cm)</label>
+                            <input type="number" id="altura" class="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Ej: 175" oninput="calcularIMCOutomatico()">
+                        </div>
+                    </div>
+                    <label class="block text-xs text-gray-500 mb-1">Tu IMC (Calculado automáticamente)</label>
+                    <input type="number" step="0.1" id="imc" required readonly class="w-full p-2 border rounded-lg bg-gray-200 text-gray-600 outline-none cursor-not-allowed font-semibold" placeholder="El resultado aparecerá aquí">
+                </div>
+
+                <!-- Estilo de Vida -->
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-running text-blue-500"></i> Estilo de Vida</h3>
+                    
+                    <label class="block text-xs text-gray-500 mb-1">Actividad Física</label>
+                    <select id="ejercicio" class="w-full p-2 border rounded-lg mb-3 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="3">Intensa (≥4 horas/sem)</option>
+                        <option value="3">Moderada (4 horas/sem)</option>
+                        <option value="2">Leve (hasta 2.5 horas/sem)</option>
+                        <option value="0">Sedentario (0 horas/sem)</option>
+                    </select>
+
+                    <label class="block text-xs text-gray-500 mb-1 mt-2">Alimentación (Frutas/Verduras)</label>
+                    <select id="alimentacion" class="w-full p-2 border rounded-lg mb-3 outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="3">Excelente (≥5 raciones al día)</option>
+                        <option value="2">Buena (3-4 raciones al día)</option>
+                        <option value="1">Regular (1-2 raciones al día)</option>
+                        <option value="0">Mala (0 raciones al día)</option>
+                    </select>
+
+                    <label class="block text-xs text-gray-500 mb-1">Tabaquismo</label>
+                    <select id="tabaco" class="w-full p-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="4">Nunca he fumado </option>
+                        <option value="3">Lo dejé hace ≥1 año</option>
+                        <option value="2">Lo dejé hace <1 año</option>
+                        <option value="1">Fumo <10 cigarrillos al día</option>
+                        <option value="0">Fumo ≥10 cigarrillos al día</option>
+                    </select>
+                </div>
+
+                <button type="button" onclick="calcular()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg shadow-blue-200 mt-4">
+                    Calcular Resultados
+                </button>
+            </form>
+
+            <!-- Resultados (Ocultos inicialmente) -->
+            <div id="resultados" class="hidden mt-6 space-y-4">
+                <hr class="border-gray-200">
+                <h2 class="text-xl font-bold text-center text-gray-800">Tus Resultados</h2>
+                
+                <!-- PAM Result -->
+                <div id="pamCard" class="p-4 rounded-xl border">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-700">Presión Arterial Media (PAM)</span>
+                        <span id="pamValue" class="text-2xl font-black"></span>
+                    </div>
+                    <p id="pamText" class="text-sm mt-2"></p>
+                    <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Rango saludable: 70 - 100 mmHg. Indica la presión promedio de sangre hacia tus órganos.</p>
+                </div>
+
+                <!-- BEWAT Result -->
+                <div id="bewatCard" class="p-4 rounded-xl border">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-gray-700">Índice Fuster-BEWAT</span>
+                        <span id="bewatValue" class="text-2xl font-black"></span>
+                    </div>
+                    <p id="bewatText" class="text-sm mt-2"></p>
+                    <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle"></i> Puntuación de 0 a 15. Mayor puntuación = Menor riesgo cardiovascular.</p>
+                </div>
+
+                <button onclick="guardarMedicion()" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-xl transition shadow mt-4">
+                    <i class="fas fa-save"></i> Guardar en mi historial
+                </button>
+            </div>
+        </div>
+
+        <!-- PESTAÑA HISTORIAL -->
+        <div id="view-historial" class="hidden p-6">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">Tu Evolución</h2>
+            <p class="text-sm text-gray-500 mb-4">Los datos se guardan de forma privada en este navegador.</p>
+            
+            <div class="bg-white p-2 rounded-xl border mb-6">
+                <canvas id="graficoEvolucion"></canvas>
+            </div>
+
+            <button onclick="borrarHistorial()" class="w-full bg-red-100 text-red-600 hover:bg-red-200 font-bold py-2 px-4 rounded-xl transition">
+                <i class="fas fa-trash"></i> Borrar Historial
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        let currentCalculo = null;
+        let chartInstance = null;
+
+        // Nueva función para calcular el IMC automáticamente al escribir
+        function calcularIMCOutomatico() {
+            const peso = parseFloat(document.getElementById('peso').value);
+            const alturaCm = parseFloat(document.getElementById('altura').value);
+            
+            if(peso > 0 && alturaCm > 0) {
+                const alturaM = alturaCm / 100; // Convertir cm a metros
+                const imc = peso / (alturaM * alturaM);
+                document.getElementById('imc').value = imc.toFixed(1); // Redondear a 1 decimal
+            } else {
+                document.getElementById('imc').value = '';
+            }
+        }
+
+        function switchTab(tab) {
+            document.getElementById('view-calculadora').classList.add('hidden');
+            document.getElementById('view-historial').classList.add('hidden');
+            document.getElementById('tab-calculadora').classList.remove('tab-active', 'text-gray-500');
+            document.getElementById('tab-historial').classList.remove('tab-active', 'text-gray-500');
+
+            if(tab === 'calculadora') {
+                document.getElementById('view-calculadora').classList.remove('hidden');
+                document.getElementById('tab-calculadora').classList.add('tab-active');
+                document.getElementById('tab-historial').classList.add('text-gray-500');
+            } else {
+                document.getElementById('view-historial').classList.remove('hidden');
+                document.getElementById('tab-historial').classList.add('tab-active');
+                document.getElementById('tab-calculadora').classList.add('text-gray-500');
+                renderChart(); // Actualizar gráfico al entrar a la pestaña
+            }
+        }
+
+        function calcular() {
+            const pas = parseFloat(document.getElementById('pas').value);
+            const pad = parseFloat(document.getElementById('pad').value);
+            const imc = parseFloat(document.getElementById('imc').value);
+            const ejercicio = parseInt(document.getElementById('ejercicio').value);
+            const alimentacion = parseInt(document.getElementById('alimentacion').value);
+            const tabaco = parseInt(document.getElementById('tabaco').value);
+
+            if(!pas || !pad || !imc) {
+                alert("Por favor, rellena la presión arterial y el IMC.");
+                return;
+            }
+
+            // 1. Cálculo PAM: (Sistólica + 2*Diastólica) / 3
+            const pam = Math.round((pas + (2 * pad)) / 3);
+            
+            let pamColor, pamDesc;
+            if(pam >= 70 && pam <= 100) {
+                pamColor = "bg-green-100 border-green-400 text-green-800";
+                pamDesc = "¡Excelente! Tu PAM está dentro del rango saludable.";
+            } else if (pam < 70) {
+                pamColor = "bg-yellow-100 border-yellow-400 text-yellow-800";
+                pamDesc = "PAM baja. Podría indicar falta de flujo a los órganos.";
+            } else {
+                pamColor = "bg-red-100 border-red-400 text-red-800";
+                pamDesc = "PAM alta. Indica riesgo de hipertensión o estrés en los órganos.";
+            }
+
+            // 2. Cálculo BEWAT
+            let scoreBP = 0;
+            if(pas < 120 && pad < 80) scoreBP = 3;
+            else if((pas >= 120 && pas <= 129) || (pad < 80 && pas >=120)) scoreBP = 2; // Simplificado
+            else if((pas >= 130 && pas <= 139) || (pad >= 80 && pad <= 89)) scoreBP = 1;
+            else scoreBP = 0;
+
+            let scoreIMC = 0;
+            if(imc < 25) scoreIMC = 3;
+            else if(imc < 30) scoreIMC = 2;
+            else if(imc < 35) scoreIMC = 1;
+            else scoreIMC = 0;
+
+            const bewatTotal = scoreBP + ejercicio + scoreIMC + alimentacion + tabaco;
+
+            let bewatColor, bewatDesc;
+            if(bewatTotal >= 12) {
+                bewatColor = "bg-green-100 border-green-400 text-green-800";
+                bewatDesc = "Riesgo Bajo. ¡Tienes unos hábitos cardiovasculares excelentes!";
+            } else if (bewatTotal >= 8) {
+                bewatColor = "bg-yellow-100 border-yellow-400 text-yellow-800";
+                bewatDesc = "Riesgo Moderado. Tienes áreas de mejora en tus hábitos.";
+            } else {
+                bewatColor = "bg-red-100 border-red-400 text-red-800";
+                bewatDesc = "Riesgo Alto. Es recomendable consultar con un médico y mejorar hábitos.";
+            }
+
+            // Render PAM
+            const pCard = document.getElementById('pamCard');
+            pCard.className = `p-4 rounded-xl border ${pamColor}`;
+            document.getElementById('pamValue').innerText = `${pam} mmHg`;
+            document.getElementById('pamText').innerText = pamDesc;
+
+            // Render BEWAT
+            const bCard = document.getElementById('bewatCard');
+            bCard.className = `p-4 rounded-xl border ${bewatColor}`;
+            document.getElementById('bewatValue').innerText = `${bewatTotal} / 15`;
+            document.getElementById('bewatText').innerText = bewatDesc;
+
+            document.getElementById('resultados').classList.remove('hidden');
+
+            // Guardar para la memoria temporal
+            currentCalculo = {
+                fecha: new Date().toLocaleDateString(),
+                timestamp: new Date().getTime(),
+                pam: pam,
+                bewat: bewatTotal
+            };
+        }
+
+        function guardarMedicion() {
+            if(!currentCalculo) return;
+
+            // Recuperamos el historial que haya en la memoria del navegador (o un array vacío si no hay)
+            let historial = JSON.parse(localStorage.getItem('cardioHistorial')) || [];
+            
+            // Añadimos el nuevo cálculo
+            historial.push(currentCalculo);
+            
+            // Lo volvevos a guardar en la memoria
+            localStorage.setItem('cardioHistorial', JSON.stringify(historial));
+
+            alert("¡Medición guardada en tu dispositivo!");
+            switchTab('historial');
+        }
+
+        function borrarHistorial() {
+            if(confirm("¿Estás seguro de que quieres borrar todos los datos guardados en este navegador?")) {
+                localStorage.removeItem('cardioHistorial');
+                renderChart();
+            }
+        }
+
+        function renderChart() {
+            let historial = JSON.parse(localStorage.getItem('cardioHistorial')) || [];
+            
+            // Ordenar por fecha (timestamp)
+            historial.sort((a, b) => a.timestamp - b.timestamp);
+
+            const etiquetasFechas = historial.map(item => item.fecha);
+            const datosPAM = historial.map(item => item.pam);
+            const datosBEWAT = historial.map(item => item.bewat);
+
+            const ctx = document.getElementById('graficoEvolucion').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            if(historial.length === 0) {
+                // Si no hay datos, mostrar un gráfico vacío de ejemplo
+                chartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: ['Sin datos'], datasets: [] },
+                    options: { plugins: { title: { display: true, text: 'Aún no hay mediciones guardadas' } } }
+                });
+                return;
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: etiquetasFechas,
+                    datasets: [
+                        {
+                            label: 'Puntuación BEWAT (0-15)',
+                            data: datosBEWAT,
+                            borderColor: '#3b82f6', // Azul
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            yAxisID: 'y',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'PAM (mmHg)',
+                            data: datosPAM,
+                            borderColor: '#ef4444', // Rojo
+                            backgroundColor: 'transparent',
+                            yAxisID: 'y1',
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            min: 0,
+                            max: 15,
+                            title: { display: true, text: 'Puntos BEWAT' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'PAM' }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
