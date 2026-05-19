@@ -141,7 +141,7 @@
         <!-- PESTAÑA HISTORIAL -->
         <div id="view-historial" class="hidden p-6">
             <h2 class="text-xl font-bold text-gray-800 mb-4">Tu Evolución</h2>
-            <p class="text-sm text-gray-500 mb-4">Los datos se guardan de forma privada en este navegador.</p>
+            <p class="text-sm text-gray-500 mb-4">Los datos se guardan de forma privada en este dispositivo.</p>
             
             <div class="bg-white p-2 rounded-xl border mb-6">
                 <canvas id="graficoEvolucion"></canvas>
@@ -158,15 +158,14 @@
         let currentCalculo = null;
         let chartInstance = null;
 
-        // Nueva función para calcular el IMC automáticamente al escribir
         function calcularIMCOutomatico() {
             const peso = parseFloat(document.getElementById('peso').value);
             const alturaCm = parseFloat(document.getElementById('altura').value);
             
             if(peso > 0 && alturaCm > 0) {
-                const alturaM = alturaCm / 100; // Convertir cm a metros
+                const alturaM = alturaCm / 100;
                 const imc = peso / (alturaM * alturaM);
-                document.getElementById('imc').value = imc.toFixed(1); // Redondear a 1 decimal
+                document.getElementById('imc').value = imc.toFixed(1);
             } else {
                 document.getElementById('imc').value = '';
             }
@@ -186,7 +185,7 @@
                 document.getElementById('view-historial').classList.remove('hidden');
                 document.getElementById('tab-historial').classList.add('tab-active');
                 document.getElementById('tab-calculadora').classList.add('text-gray-500');
-                renderChart(); // Actualizar gráfico al entrar a la pestaña
+                renderChart(); 
             }
         }
 
@@ -199,11 +198,11 @@
             const tabaco = parseInt(document.getElementById('tabaco').value);
 
             if(!pas || !pad || !imc) {
-                alert("Por favor, rellena la presión arterial y el IMC.");
+                alert("Por favor, rellena la presión arterial, tu peso y altura.");
                 return;
             }
 
-            // 1. Cálculo PAM: (Sistólica + 2*Diastólica) / 3
+            // 1. Cálculo PAM
             const pam = Math.round((pas + (2 * pad)) / 3);
             
             let pamColor, pamDesc;
@@ -221,7 +220,7 @@
             // 2. Cálculo BEWAT
             let scoreBP = 0;
             if(pas < 120 && pad < 80) scoreBP = 3;
-            else if((pas >= 120 && pas <= 129) || (pad < 80 && pas >=120)) scoreBP = 2; // Simplificado
+            else if((pas >= 120 && pas <= 129) || (pad < 80 && pas >=120)) scoreBP = 2;
             else if((pas >= 130 && pas <= 139) || (pad >= 80 && pad <= 89)) scoreBP = 1;
             else scoreBP = 0;
 
@@ -245,13 +244,12 @@
                 bewatDesc = "Riesgo Alto. Es recomendable consultar con un médico y mejorar hábitos.";
             }
 
-            // Render PAM
+            // Render
             const pCard = document.getElementById('pamCard');
             pCard.className = `p-4 rounded-xl border ${pamColor}`;
             document.getElementById('pamValue').innerText = `${pam} mmHg`;
             document.getElementById('pamText').innerText = pamDesc;
 
-            // Render BEWAT
             const bCard = document.getElementById('bewatCard');
             bCard.className = `p-4 rounded-xl border ${bewatColor}`;
             document.getElementById('bewatValue').innerText = `${bewatTotal} / 15`;
@@ -270,16 +268,9 @@
 
         function guardarMedicion() {
             if(!currentCalculo) return;
-
-            // Recuperamos el historial que haya en la memoria del navegador (o un array vacío si no hay)
             let historial = JSON.parse(localStorage.getItem('cardioHistorial')) || [];
-            
-            // Añadimos el nuevo cálculo
             historial.push(currentCalculo);
-            
-            // Lo volvevos a guardar en la memoria
             localStorage.setItem('cardioHistorial', JSON.stringify(historial));
-
             alert("¡Medición guardada en tu dispositivo!");
             switchTab('historial');
         }
@@ -293,8 +284,6 @@
 
         function renderChart() {
             let historial = JSON.parse(localStorage.getItem('cardioHistorial')) || [];
-            
-            // Ordenar por fecha (timestamp)
             historial.sort((a, b) => a.timestamp - b.timestamp);
 
             const etiquetasFechas = historial.map(item => item.fecha);
@@ -308,7 +297,6 @@
             }
 
             if(historial.length === 0) {
-                // Si no hay datos, mostrar un gráfico vacío de ejemplo
                 chartInstance = new Chart(ctx, {
                     type: 'line',
                     data: { labels: ['Sin datos'], datasets: [] },
@@ -325,7 +313,7 @@
                         {
                             label: 'Puntuación BEWAT (0-15)',
                             data: datosBEWAT,
-                            borderColor: '#3b82f6', // Azul
+                            borderColor: '#3b82f6',
                             backgroundColor: 'rgba(59, 130, 246, 0.2)',
                             yAxisID: 'y',
                             tension: 0.3,
@@ -334,7 +322,7 @@
                         {
                             label: 'PAM (mmHg)',
                             data: datosPAM,
-                            borderColor: '#ef4444', // Rojo
+                            borderColor: '#ef4444',
                             backgroundColor: 'transparent',
                             yAxisID: 'y1',
                             tension: 0.3
@@ -343,24 +331,14 @@
                 },
                 options: {
                     responsive: true,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     scales: {
                         y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            min: 0,
-                            max: 15,
+                            type: 'linear', display: true, position: 'left', min: 0, max: 15,
                             title: { display: true, text: 'Puntos BEWAT' }
                         },
                         y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            grid: { drawOnChartArea: false },
+                            type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false },
                             title: { display: true, text: 'PAM' }
                         }
                     }
