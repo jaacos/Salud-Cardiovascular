@@ -1,1 +1,2 @@
 Esta aplicación web es una calculadora de riesgo cardiovascular basada en el índice de Fuster-BEWAT y la Presión Arterial Media (PAM). Está diseñada para ayudar a los usuarios a evaluar su salud cardiovascular y hacer un seguimiento de sus progresos a lo largo del tiempo.
+ Úsela como una herramienta educativa y de motivación para conocer su estado y asi consiga mejorar sus hábitos de vida.
