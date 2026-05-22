@@ -2,8 +2,24 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Ajustamos el viewport para que no haga zoom extraño al tocar botones -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Calculadora Salud Cardiovascular</title>
+    
+    <!-- Etiquetas para comportarse como App Nativa en iOS y Android -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CardioCalc">
+    <meta name="theme-color" content="#2563eb">
+    
+    <!-- Icono de la App -->
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/871/871360.png">
+    <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/871/871360.png">
+    
+    <!-- Manifest incrustado (Evita tener que crear el archivo manifest.json en GitHub) -->
+    <link rel="manifest" href="data:application/manifest+json;charset=utf-8,%7B%22name%22%3A%22Calculadora%20Salud%20Cardiovascular%22%2C%22short_name%22%3A%22CardioCalc%22%2C%22start_url%22%3A%22.%2F%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23f3f4f6%22%2C%22theme_color%22%3A%22%232563eb%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22https%3A%2F%2Fcdn-icons-png.flaticon.com%2F512%2F871%2F871360.png%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fpng%22%7D%5D%7D">
+
     <!-- Tailwind CSS para el diseño -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js para las gráficas -->
@@ -55,7 +71,7 @@
                     </div>
                 </div>
 
-                <!-- IMC (Peso) -->
+                <!-- IMC (Peso y Altura) -->
                 <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
                     <h3 class="font-bold text-gray-700 mb-3"><i class="fas fa-weight text-blue-500"></i> Índice de Masa Corporal (IMC)</h3>
                     <div class="grid grid-cols-2 gap-4 mb-3">
@@ -158,6 +174,7 @@
         let currentCalculo = null;
         let chartInstance = null;
 
+        // Función para calcular automáticamente el IMC
         function calcularIMCOutomatico() {
             const peso = parseFloat(document.getElementById('peso').value);
             const alturaCm = parseFloat(document.getElementById('altura').value);
@@ -171,6 +188,7 @@
             }
         }
 
+        // Función para cambiar entre pestañas
         function switchTab(tab) {
             document.getElementById('view-calculadora').classList.add('hidden');
             document.getElementById('view-historial').classList.add('hidden');
@@ -197,8 +215,14 @@
             const alimentacion = parseInt(document.getElementById('alimentacion').value);
             const tabaco = parseInt(document.getElementById('tabaco').value);
 
+            // Validar que los campos no estén vacíos
             if(!pas || !pad || !imc) {
-                alert("Por favor, rellena la presión arterial, tu peso y altura.");
+                // Se usa un mensaje visual amigable en vez de alert
+                const mensaje = document.createElement('div');
+                mensaje.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg z-50 transition-opacity duration-300';
+                mensaje.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i> Faltan datos (Presión, Peso o Altura)';
+                document.body.appendChild(mensaje);
+                setTimeout(() => { mensaje.classList.add('opacity-0'); setTimeout(() => mensaje.remove(), 300); }, 3000);
                 return;
             }
 
@@ -244,7 +268,7 @@
                 bewatDesc = "Riesgo Alto. Es recomendable consultar con un médico y mejorar hábitos.";
             }
 
-            // Render
+            // Renderizar resultados
             const pCard = document.getElementById('pamCard');
             pCard.className = `p-4 rounded-xl border ${pamColor}`;
             document.getElementById('pamValue').innerText = `${pam} mmHg`;
@@ -264,6 +288,11 @@
                 pam: pam,
                 bewat: bewatTotal
             };
+            
+            // Hacer scroll hacia los resultados
+            setTimeout(() => {
+                document.getElementById('resultados').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
         }
 
         function guardarMedicion() {
@@ -271,15 +300,40 @@
             let historial = JSON.parse(localStorage.getItem('cardioHistorial')) || [];
             historial.push(currentCalculo);
             localStorage.setItem('cardioHistorial', JSON.stringify(historial));
-            alert("¡Medición guardada en tu dispositivo!");
+            
+            // Notificación visual
+            const mensaje = document.createElement('div');
+            mensaje.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 font-bold transition-opacity duration-300';
+            mensaje.innerHTML = '<i class="fas fa-check-circle mr-2"></i> ¡Medición guardada con éxito!';
+            document.body.appendChild(mensaje);
+            setTimeout(() => { mensaje.classList.add('opacity-0'); setTimeout(() => mensaje.remove(), 300); }, 2500);
+            
             switchTab('historial');
         }
 
+        // Función para borrar el historial
         function borrarHistorial() {
-            if(confirm("¿Estás seguro de que quieres borrar todos los datos guardados en este navegador?")) {
+            // Reemplazo del confirm tradicional por uno visual para cumplir los estándares de calidad UI
+            const overlay = document.createElement('div');
+            overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            overlay.innerHTML = `
+                <div class="bg-white p-6 rounded-2xl w-11/12 max-w-sm text-center">
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">¿Borrar todo?</h3>
+                    <p class="text-gray-600 mb-6">Esta acción no se puede deshacer y perderás toda tu evolución.</p>
+                    <div class="flex space-x-3">
+                        <button id="btnCancel" class="flex-1 py-2 rounded-xl bg-gray-200 text-gray-800 font-bold">Cancelar</button>
+                        <button id="btnConfirm" class="flex-1 py-2 rounded-xl bg-red-600 text-white font-bold">Sí, borrar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            document.getElementById('btnCancel').onclick = () => overlay.remove();
+            document.getElementById('btnConfirm').onclick = () => {
                 localStorage.removeItem('cardioHistorial');
                 renderChart();
-            }
+                overlay.remove();
+            };
         }
 
         function renderChart() {
@@ -317,7 +371,8 @@
                             backgroundColor: 'rgba(59, 130, 246, 0.2)',
                             yAxisID: 'y',
                             tension: 0.3,
-                            fill: true
+                            fill: true,
+                            pointRadius: 5
                         },
                         {
                             label: 'PAM (mmHg)',
@@ -325,7 +380,9 @@
                             borderColor: '#ef4444',
                             backgroundColor: 'transparent',
                             yAxisID: 'y1',
-                            tension: 0.3
+                            tension: 0.3,
+                            pointStyle: 'rectRot',
+                            pointRadius: 6
                         }
                     ]
                 },
